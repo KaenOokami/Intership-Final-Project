@@ -1,0 +1,138 @@
+import re
+import smtplib
+import glob, os
+import datetime
+import hashlib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+import base64
+os.chdir("C:\Python2Class\PROJECTS\\PROJECT2")
+
+#Victor's Code
+record = open ('C:\Python2Class\PROJECTS\\PROJECT2\population.csv','r') #opens population.csv
+dillard = open ('C:\Python2Class\PROJECTS\\PROJECT2\myemail.csv','r') #opens email.csv
+out_ftp = open('ftp.csv','w') #This line will create file called ftp.csv
+out_exemptions = open('exemptions.csv','w') #This line will create a file called exemptions.csv
+out_database = open('database.csv','w') #This line will create a file called databse.csv
+currentDT = datetime.datetime.now() #Sets the Date and Time to the current date and time
+
+#same = set(record).intersection(dillard)
+
+#Kennedy's/Vic's Code
+for line in dillard:
+    line = line.strip()
+    x = line
+    fname,lname,sid,email, *rest= x.split(',')
+    print(fname)
+    print(lname)
+    print(sid)
+    print (email)
+#Code below checks each line in record and splits them they're then assigned to variables.
+    for line in record:
+        line = line.strip()
+        y = line
+        fname2,lname2,email2,sid2,role, *rest= y.split("\t")
+        print(fname2)
+        print(lname2)   
+        print(email2)
+        print(sid2)
+        print(role)  
+        
+        if (email2 != 'NULL'): #If the ID is the same in Population and Myemail the line will be written to ftp
+            out_ftp.write(line) 
+            out_ftp.write('\n')
+        
+        elif (email2 == 'NULL'): #If there is no ID or Invalid the file will be written to Exemptions
+            out_exemptions.write(line)    
+            out_exemptions.write('\n')
+
+     
+#Code below checks each email in record if the email is a dillard email it will be written to file ftp.csv   
+for email2 in record:
+    line = line.strip()
+    address,site = line.split("@")
+    if (site == "dillard.edu"):
+        out_database.write(line)
+        out_database.write("\n")
+        
+id = sid
+status = role
+combinedString = id+status+'M0jit0'
+hash = hashlib.md5(combinedString.encode())
+hash1 = str(hash)
+mystring = 'https://dillard.universitytickets.com/campus_auth.asp?Cust_id='+id+'&Cust_Status='+status+'&hash='+str(hash.hexdigest())
+        
+#for line in 'database.csv':
+   # line = line.strip()
+   # z = line
+    #JOB_NAME = LOADDATA
+   # USER_NAME = SA
+   # JOB_TIME = currentDT
+    #HTML_LINK = '<a href=\"'+mystring+ '\"target="_blank">Login</a>' 
+   
+#Amara's Code
+def checkEmail(email2):
+   
+       #email = 'derr@aolcom'
+    if re.match(r"[^@]+@[^@]+\.[^@]+", email2):
+        return 1
+    else:
+        return 0
+   
+testEmail = 'NULL'
+ans = checkEmail(testEmail)
+   
+print(ans)
+   
+testEmail2 = email
+ans2 = checkEmail(testEmail2)
+print(ans2)
+
+
+emailfrom = "chiefbann@gmail.com"
+emailto = "elliott.hudson@dillard.edu"
+
+msg = MIMEMultipart()
+msg["From"] = emailfrom
+msg["To"] = emailto
+msg["Subject"] = "This is the exemptions file"
+
+
+
+body = "This is the exemptions file."
+
+msg.attach(MIMEText(body, 'plain'))
+
+
+file = open("exemptions.csv","rb")
+attachment = MIMEBase("application/octet-stream", _subtype="subtype")
+attachment.set_payload((file).read())
+encoders.encode_base64(attachment)
+attachment.add_header('Content-Disposition', "attachment; filename=file")
+msg.attach(attachment)
+
+text = msg.as_string()
+
+
+username = "dillarditt@gmail.com"  
+password = "semester2018"
+
+server = smtplib.SMTP('smtp.gmail.com:587')
+server.starttls()
+server.login(username,password)
+server.sendmail(emailfrom, emailto, text)
+server.quit()
+            
+
+#The code below should go at the very end of the code to close the opened files
+out_database.close() #This line will close database.csv
+out_exemptions.close() #This line will close exemptions.csv
+out_ftp.close() #This line will close ftp.csv
+dillard.close() #This line will close Dillard
+record.close() #This line will close population.csv
+
+        
+        
+            
